@@ -16,17 +16,18 @@ contract Vault {
 
     constructor() {
         endAt = 0;
+        lastAddress = payable(0);
     }
 
     function sendEther() external payable {
         require(msg.value > 0, "Ether value must be more than 0.");
         if (endAt == 0) {
-            endAt = block.timestamp + 1 days;
+            endAt = block.timestamp + 1 minutes;
         }
 
         if (block.timestamp < endAt) {
             lastAddress = payable(msg.sender);
-            endAt = block.timestamp + 1 days;
+            endAt = block.timestamp + 1 minutes;
             emit EtherReceived(msg.sender, msg.value);
         }
     }
@@ -39,5 +40,6 @@ contract Vault {
         emit RewardPayedOut(msg.sender, address(this).balance, "Reward claimed, congratulations!");
         lastAddress.transfer(address(this).balance);
         endAt = 0;
+        lastAddress = payable(0);
     }
 }
