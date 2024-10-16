@@ -5,8 +5,34 @@ import "forge-std/Test.sol";
 import "../src/Vault.sol";
 import "../src/ThreeSigmaNFT.sol";
 
+// Test contract inheriting from Vault
+contract TestableVault is Vault {
+    // Call the parent constructor and pass the argument directly
+    constructor(address _nftAddress) Vault(_nftAddress) {}
+    // Expose private variables through internal getter functions for testing
+    function getEndAt() external view returns (uint256) {
+        return endAt;  // Access private variable `endAt`
+    }
+
+    function getEndAtNft() external view returns (uint256) {
+        return endAtNft;  // Access private variable `endAtNft`
+    }
+
+    function getLastAddress() external view returns (address) {
+        return lastAddress;  // Access private variable `lastAddress`
+    }
+
+    function getLastNftAddress() external view returns (address) {
+        return lastNftAddress;  // Access private variable `lastNftAddress`
+    }
+
+    function getNftIds(uint256 idx) external view returns (uint256) {
+        return nftIds[idx];  // Access private variable `lastNftAddress`
+    }
+}
+
 contract VaultTest is Test {
-    Vault vault;
+    TestableVault vault;
     ThreeSigmaNFT nft;
     address owner;
     address user1;
@@ -19,7 +45,7 @@ contract VaultTest is Test {
 
         // Deploy NFT and Vault contracts
         nft = new ThreeSigmaNFT();
-        vault = new Vault(address(nft));
+        vault = new TestableVault(address(nft));
 
         // Mint NFTs to users
         nft.mint(user1);
@@ -30,17 +56,17 @@ contract VaultTest is Test {
         vm.deal(user2, 10 ether);
     }
 
-/// @notice Test Ether deposit and event emission
-function testSendEther() public {
-    vm.prank(user1); // Set msg.sender as user1
-    
-    // Call the function that should emit the event
-    vault.sendEther{value: 1 ether}();
+    /// @notice Test Ether deposit and event emission
+    function testSendEther() public {
+        vm.prank(user1); // Set msg.sender as user1
+        
+        // Call the function that should emit the event
+        vault.sendEther{value: 1 ether}();
 
-    // Verify the Ether was received correctly and the contract state was updated
-    assertEq(vault.lastAddress(), user1);            // Verify lastAddress was updated to user1
-    assert(vault.endAt() > block.timestamp);         // Verify the timer is set correctly
-}
+        // Verify the Ether was received correctly and the contract state was updated
+        assertEq(vault.getLastAddress(), user1);            // Verify lastAddress was updated to user1
+        assert(vault.getEndAt() > block.timestamp);         // Verify the timer is set correctly
+    }
 
 
     /// @notice Test Ether claim by the last depositor
@@ -58,8 +84,8 @@ function testSendEther() public {
         assertEq(user1.balance, initialBalance + 1 ether); // Verify user1 claimed Ether
 
         // Verify contract state reset
-        assertEq(vault.endAt(), 0);
-        assertEq(vault.lastAddress(), address(0));
+        assertEq(vault.getEndAt(), 0);
+        assertEq(vault.getLastAddress(), address(0));
     }
 
     /// @notice Test that only the last Ether depositor can claim the funds
@@ -81,8 +107,8 @@ function testSendEther() public {
         vm.prank(user1);
         vault.sendNft(0);
 
-        assertEq(vault.lastNftAddress(), user1); // Verify last NFT address
-        assert(vault.endAtNft() > block.timestamp); // Check that timer is set
+        assertEq(vault.getLastNftAddress(), user1); // Verify last NFT address
+        assert(vault.getEndAtNft() > block.timestamp); // Check that timer is set
     }
 
     /// @notice Test NFT claim by the last depositor
@@ -100,11 +126,11 @@ function testSendEther() public {
         assertEq(nft.ownerOf(0), user1); // Verify NFT returned to user1
 
         // Verify contract state reset
-        assertEq(vault.endAtNft(), 0);
-        assertEq(vault.lastNftAddress(), address(0));
+        assertEq(vault.getEndAtNft(), 0);
+        assertEq(vault.getLastNftAddress(), address(0));
         
         vm.expectRevert();
-        vault.nftIds(0);  // This should revert because the array is empty
+        vault.getNftIds(0);  // This should revert because the array is empty
     }
 
     /// @notice Test that only the last NFT depositor can claim the NFTs

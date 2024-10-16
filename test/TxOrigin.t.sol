@@ -17,7 +17,7 @@ contract CallMeMaybeTest is Test {
         attacker = address(0xBEEF);
 
         // Give the attacker some ETH to perform the exploit
-        vm.deal(attacker, 10 ether);
+        vm.deal(attacker, 1 ether);
         
         // Fund the vulnerable contract with 10 ETH
         vm.deal(address(callMeMaybe), 10 ether);
