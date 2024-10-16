@@ -75,7 +75,7 @@ contract VaultTest is Test {
         vault.sendEther{value: 1 ether}();
 
         // Fast forward time to simulate end of timer
-        vm.warp(block.timestamp + 2 minutes);
+        vm.warp(block.timestamp + 2 days);
 
         uint256 initialBalance = user1.balance;
         vm.prank(user1);
@@ -93,7 +93,7 @@ contract VaultTest is Test {
         vm.prank(user1);
         vault.sendEther{value: 1 ether}();
 
-        vm.warp(block.timestamp + 2 minutes);
+        vm.warp(block.timestamp + 2 days);
 
         vm.prank(user2);
         vm.expectRevert("Only the winner can claim the funds.");
@@ -118,7 +118,7 @@ contract VaultTest is Test {
         vm.prank(user1);
         vault.sendNft(0);
 
-        vm.warp(block.timestamp + 2 minutes);
+        vm.warp(block.timestamp + 2 days);
 
         vm.prank(user1);
         vault.claimNfts();
@@ -140,7 +140,7 @@ contract VaultTest is Test {
         vm.prank(user1);
         vault.sendNft(0);
 
-        vm.warp(block.timestamp + 2 minutes);
+        vm.warp(block.timestamp + 2 days);
 
         vm.prank(user2);
         vm.expectRevert("Only the last depositor can claim the NFTs");

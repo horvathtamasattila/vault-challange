@@ -12,8 +12,8 @@ contract Vault {
     /// @notice Event emitted when Ether reward is paid out
     /// @param recipient The address receiving the reward
     /// @param amount The amount of Ether paid out
-    /// @param reason The reason for the reward
-    event RewardPayedOut(address indexed recipient, uint256 amount, string reason);
+    /// @param message The message for the payout
+    event RewardPayedOut(address indexed recipient, uint256 amount, string message);
 
     /// @notice Event emitted when an NFT is received
     /// @param sender The address that sent the NFT
@@ -41,6 +41,7 @@ contract Vault {
     uint256[] internal nftIds;
 
     /// @notice Address of the ThreeSigma NFT contract
+    /// @dev In production this should be a constant using the NFT's address to ensure security, we make it injectable now to ease testing
     address internal nftAddress;
 
     /// @notice Initializes the Vault contract and sets initial values
@@ -59,7 +60,7 @@ contract Vault {
 
 
     /// @notice Allows users to send Ether to the contract and participate in the Ether reward pool
-    /// @dev If the countdown timer is active, it resets to 1 minute after each deposit
+    /// @dev If the countdown timer is active, it resets to 1 day after each deposit
     function sendEther() external payable {
         require(msg.value > 0, "Ether value must be more than 0.");
         if (endAt == 0) {
@@ -75,19 +76,19 @@ contract Vault {
 
     /// @notice Allows the last person who sent Ether to claim all the Ether in the contract
     /// @dev Can only be called when the timer expires
-function claimEther() external {
-    require(msg.sender == lastAddress, "Only the winner can claim the funds.");
-    require(block.timestamp >= endAt, "The competition hasn't finished yet.");
+    function claimEther() external {
+        require(msg.sender == lastAddress, "Only the winner can claim the funds.");
+        require(block.timestamp >= endAt, "The competition hasn't finished yet.");
 
-    // Reentrancy protection, reset game state
-    uint256 balance = address(this).balance;
-    lastAddress = payable(0);
-    endAt = 0;
+        // Reentrancy protection, reset game state
+        uint256 balance = address(this).balance;
+        lastAddress = payable(0);
+        endAt = 0;
 
-    // Now transfer the Ether
-    payable(msg.sender).transfer(balance);
-    emit RewardPayedOut(msg.sender, balance, "Reward claimed, congratulations!");
-}
+        // Now transfer the Ether
+        payable(msg.sender).transfer(balance);
+        emit RewardPayedOut(msg.sender, balance, "Reward claimed, congratulations!");
+    }
 
     /// @notice Allows users to send an NFT to the contract and participate in the NFT reward pool
     /// @param _nftId The ID of the NFT to deposit
